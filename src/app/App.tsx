@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 
 const img = (file: string) => new URL(`../imports/${file}`, import.meta.url).href;
 
@@ -43,8 +44,118 @@ const HERO_SLIDES = [
   { en: "VISUAL",   ko: "비주얼 커뮤니케이션",     sub: "디자인으로 연결하는 세계"   },
 ];
 
-// Hero 배경 이미지: 01~04 중 선택
-const HERO_BG = [img("03.png"), img("19.png"), img("03.png"), img("04.png")];
+function SphereCanvas() {
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const w = mount.clientWidth, h = mount.clientHeight;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x080808);
+
+    const camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 100);
+    camera.position.z = 9;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mount.appendChild(renderer.domElement);
+
+    // 조명
+    scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+    const key = new THREE.DirectionalLight(0xffffff, 2.5);
+    key.position.set(6, 6, 4);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0x4466aa, 1.2);
+    rim.position.set(-6, -4, -4);
+    scene.add(rim);
+    const fill = new THREE.PointLight(0xffffff, 0.5, 20);
+    fill.position.set(0, 3, 3);
+    scene.add(fill);
+
+    // 구체 데이터
+    const data = [
+      { p: [-3.2,  1.0,  0.0] as [number,number,number], r: 1.8, metal: 0.95, rough: 0.05 },
+      { p: [ 3.0, -0.8, -2.0] as [number,number,number], r: 1.4, metal: 0.9,  rough: 0.1  },
+      { p: [ 0.5,  2.5, -1.5] as [number,number,number], r: 0.9, metal: 0.85, rough: 0.15 },
+      { p: [-1.0, -2.5,  0.5] as [number,number,number], r: 1.1, metal: 0.9,  rough: 0.08 },
+      { p: [ 4.5,  1.5, -3.0] as [number,number,number], r: 0.7, metal: 0.95, rough: 0.05 },
+      { p: [-4.0, -0.5, -2.5] as [number,number,number], r: 1.0, metal: 0.88, rough: 0.12 },
+      { p: [ 1.5, -1.5,  1.0] as [number,number,number], r: 0.6, metal: 0.92, rough: 0.08 },
+    ];
+
+    const group = new THREE.Group();
+    const meshes: THREE.Mesh[] = [];
+    const origins = data.map(d => ({ ...d }));
+    const offsets = data.map(() => Math.random() * Math.PI * 2);
+
+    data.forEach(d => {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(d.r, 128, 128),
+        new THREE.MeshStandardMaterial({
+          color: 0x1a1a1a,
+          metalness: d.metal,
+          roughness: d.rough,
+          envMapIntensity: 1.2,
+        })
+      );
+      mesh.position.set(...d.p);
+      group.add(mesh);
+      meshes.push(mesh);
+    });
+    scene.add(group);
+
+    // 마우스
+    const mouse = { x: 0, y: 0 };
+    const rot = { x: 0, y: 0 };
+    const onMouse = (e: MouseEvent) => {
+      mouse.x = (e.clientX / window.innerWidth  - 0.5) * 2;
+      mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+    };
+    window.addEventListener("mousemove", onMouse);
+
+    const onResize = () => {
+      const nw = mount.clientWidth, nh = mount.clientHeight;
+      camera.aspect = nw / nh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(nw, nh);
+    };
+    window.addEventListener("resize", onResize);
+
+    const clock = new THREE.Clock();
+    let id: number;
+    const animate = () => {
+      id = requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      rot.y += (mouse.x * 0.25 - rot.y) * 0.04;
+      rot.x += (mouse.y * 0.15 - rot.x) * 0.04;
+      group.rotation.y = rot.y;
+      group.rotation.x = rot.x;
+
+      meshes.forEach((m, i) => {
+        m.position.y = origins[i].p[1] + Math.sin(t * 0.4 + offsets[i]) * 0.25;
+        m.rotation.y += 0.004;
+        m.rotation.x += 0.002;
+      });
+
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("resize", onResize);
+      mount.removeChild(renderer.domElement);
+      renderer.dispose();
+    };
+  }, []);
+
+  return <div ref={mountRef} className="absolute inset-0" />;
+}
 
 function useIntersection(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null);
@@ -98,26 +209,9 @@ function Hero() {
   const current = HERO_SLIDES[slide];
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-black flex flex-col justify-end">
-      {/* 배경: 01~04 이미지 3분할 */}
-      <div className="absolute inset-0 grid grid-cols-2">
-        <div
-          className="bg-cover bg-center opacity-40"
-          style={{ backgroundImage: `url(${HERO_BG[0]})` }}
-        />
-        <div className="grid grid-rows-2">
-          <div
-            className="bg-cover bg-center opacity-35"
-            style={{ backgroundImage: `url(${HERO_BG[1]})` }}
-          />
-          <div
-            className="bg-cover bg-center opacity-30"
-            style={{ backgroundImage: `url(${HERO_BG[3]})` }}
-          />
-        </div>
-      </div>
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
+    <section className="relative h-screen w-full overflow-hidden bg-[#080808] flex flex-col justify-end">
+      <SphereCanvas />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
       <div className="relative z-10 px-8 md:px-16 pb-20">
         <div
