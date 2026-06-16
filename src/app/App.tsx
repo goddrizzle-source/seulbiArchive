@@ -475,6 +475,10 @@ function Footer() {
 }
 
 export default function App() {
+  useEffect(() => {
+    fetch("https://api.countapi.xyz/hit/seulbiarchive.vercel.app/visits").catch(() => {});
+  }, []);
+
   return (
     <>
       <style>{`
