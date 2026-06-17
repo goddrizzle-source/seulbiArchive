@@ -12,7 +12,7 @@ import {
 const SUPABASE_URL = "https://hnlfdtiuxapjyyhotxzq.supabase.co";
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubGZkdGl1eGFwanl5aG90eHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1ODk0ODQsImV4cCI6MjA5NzE2NTQ4NH0.U3GCqb3EN18oPf31yr9P0cRzMCzIEUghp_0od1Sz810";
-const PASSWORD = "slbi2026";
+const PASSWORD = "seulbi0331";
 
 type DailyVisit = { date: string; count: number };
 
