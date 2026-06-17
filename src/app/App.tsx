@@ -476,7 +476,7 @@ function Footer() {
 
 export default function App() {
   useEffect(() => {
-    fetch("https://hnlfdtiuxapjyyhotxzq.supabase.co/rest/v1/rpc/increment_visits", {
+    fetch("https://hnlfdtiuxapjyyhotxzq.supabase.co/rest/v1/rpc/increment_daily_visits", {
       method: "POST",
       headers: {
         "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubGZkdGl1eGFwanl5aG90eHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1ODk0ODQsImV4cCI6MjA5NzE2NTQ4NH0.U3GCqb3EN18oPf31yr9P0cRzMCzIEUghp_0od1Sz810",
